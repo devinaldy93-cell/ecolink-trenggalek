@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECOLINK - Citizen Science Platform</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+/* --- Global Styles & Variables --- */
+:root {
+    --primary: #2e7d32;
+    --primary-dark: #1b5e20;
+    --accent: #81c784;
+    --bg-color: #f4f9f4;
+    --text-color: #333333;
+    --text-light: #666666;
+    --white: #ffffff;
+    --gray-light: #e0e0e0;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+    --warn: #f9a825;
+    --danger: #e53935;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* --- Unified Navbar --- */
+.unified-navbar {
+    background: var(--white);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 14px 0;
+    position: sticky;
+    top: 0;
+    z-index: 2000;
+}
+
+.unified-navbar .nav-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.unified-logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    user-select: none;
+}
+
+.unified-links {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.unified-links button {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-color);
+    font: inherit;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.unified-links button:hover {
+    color: var(--primary);
+}
+
+.unified-links .nav-login {
+    background: var(--primary);
+    color: var(--white) !important;
+    padding: 8px 18px;
+    border-radius: 20px;
+}
+
+.unified-links .nav-login:hover {
+    background: var(--primary-dark);
+}
+
+.unified-links .nav-admin {
+    background: #37474f;
+    color: var(--white) !important;
+    padding: 8px 16px;
+    border-radius: 20px;
+}
+
+.unified-links .nav-admin:hover {
+    background: #263238;
+}
+
+.user-greeting {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-right: 6px;
+}
+
+.role-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: var(--primary-dark);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+}
+
+.btn-logout {
+    background: #e53935 !important;
+    color: var(--white) !important;
+    padding: 6px 14px !important;
+    border-radius: 16px !important;
+    font-size: 0.85rem !important;
+}
+
+.btn-logout:hover {
+    background: #c62828 !important;
+}
+
+/* --- Page Management --- */
+.page {
+    display: none;
+    min-height: calc(100vh - 70px);
+}
+
+.page.active {
+    display: block;
+}
+
+/* --- Hero Section --- */
+.hero {
+    background: linear-gradient(rgba(27, 94, 32, 0.75), rgba(46, 125, 50, 0.75)), url('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1200&q=80') no-repeat center center/cover;
+    color: var(--white);
+    text-align: center;
+    padding: 100px 20px;
+}
+
+.hero h1 {
+    font-size: 2.8rem;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-primary {
+    display: inline-block;
+    background-color: var(--accent);
+    color: var(--primary-dark);
+    padding: 12px 30px;
+    border-radius: 30px;
+    font-weight: bold;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    font-size: 1rem;
+}
+
+.btn-primary:hover {
+    background-color: var(--white);
+    transform: translateY(-2px);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* --- News Section --- */
+.news-section {
+    padding: 60px 0;
+}
+
+.news-section h2 {
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 2rem;
+    color: var(--primary-dark);
+}
+
+.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.news-card {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.news-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.news-card img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    background-color: #e8f5e9;
+}
+
+.news-content {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.news-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.news-location {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.news-date {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.news-content h3 {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+    color: var(--primary-dark);
+    line-height: 1.4;
+}
+
+.news-content p {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 12px;
+    flex: 1;
+}
+
+.coords-info {
+    font-size: 0.8rem;
+    color: #777;
+    font-family: monospace;
+}
+
+.submitter-info {
+    font-size: 0.78rem;
+    color: #888;
+    border-top: 1px dashed var(--gray-light);
+    padding-top: 8px;
+    margin-top: 4px;
+}
+
+/* --- Auth & Form Sections --- */
+.auth-section {
+    padding: 3rem 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 120px);
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 440px;
+}
+
+.auth-container.news-container {
+    max-width: 650px;
+}
+
+.auth-container.admin-container {
+    max-width: 950px;
+}
+
+.auth-box {
+    background: var(--white);
+    padding: 2.5rem;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+}
+
+.auth-box h2 {
+    color: var(--primary-dark);
+    margin-bottom: 0.5rem;
+    font-size: 1.8rem;
+}
+
+.auth-box p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    background: var(--white);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.role-options {
+    display: flex;
+    gap: 10px;
+}
+
+.role-option {
+    flex: 1;
+    text-align: center;
+    padding: 12px 8px;
+    border: 2px solid var(--gray-light);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-light);
+    transition: var(--transition);
+    user-select: none;
+}
+
+.role-option.selected {
+    border-color: var(--primary);
+    background: #e8f5e9;
+    color: var(--primary-dark);
+}
+
+.auth-box .btn-primary {
+    width: 100%;
+    border-radius: 8px;
+    background-color: var(--primary);
+    color: var(--white);
+    padding: 0.8rem;
+}
+
+.auth-box .btn-primary:hover {
+    background-color: var(--primary-dark);
+    color: var(--white);
+}
+
+.auth-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.auth-link a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-link a:hover {
+    text-decoration: underline;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.form-error {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+    display: none;
+}
+
+/* Map */
+#map {
+    width: 100%;
+    height: 300px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-bottom: 0.5rem;
+}
+
+.map-hint {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+}
+
+/* Result Alert */
+#result {
+    display: none;
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #e8f5e9;
+    color: var(--primary-dark);
+    border: 1px solid #c8e6c9;
+}
+
+/* --- Admin Dashboard --- */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.admin-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--gray-light);
+}
+
+.admin-tab-btn {
+    background: transparent;
+    border: none;
+    padding: 10px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-light);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    font-size: 0.95rem;
+}
+
+.admin-tab-btn.active {
+    color: var(--primary-dark);
+    border-bottom-color: var(--primary);
+}
+
+.admin-tab-content {
+    display: none;
+}
+
+.admin-tab-content.active {
+    display: block;
+}
+
+.pending-item {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--warn);
+}
+
+.pending-item.approved-item {
+    border-left-color: var(--primary);
+}
+
+.pending-item h4 {
+    color: var(--primary-dark);
+    margin-bottom: 6px;
+    font-size: 1.1rem;
+}
+
+.pending-item .meta-row {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pending-item .meta-row span strong {
+    color: #444;
+}
+
+.pending-item p.desc {
+    font-size: 0.92rem;
+    color: #555;
+    margin-bottom: 14px;
+}
+
+.pending-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-approve {
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.88rem;
+}
+
+.btn-approve:hover {
+    background: var(--primary-dark);
+}
+
+.btn-reject {
+    background: var(--danger);
+    color: var(--white);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.88rem;
+}
+
+.btn-reject:hover {
+    background: #b71c1c;
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--text-light);
+    padding: 40px 20px;
+    font-size: 0.95rem;
+}
+
+.access-denied {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.access-denied h2 {
+    color: var(--danger);
+    margin-bottom: 10px;
+}
+
+.status-pill {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 10px;
+}
+
+.status-pill.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-pill.approved {
+    background: #d4edda;
+    color: #155724;
+}
+
+@media (max-width: 768px) {
+    .auth-box {
+        padding: 1.5rem;
+    }
+    .hero h1 {
+        font-size: 2.1rem;
+    }
+    .unified-links {
+        gap: 8px;
+    }
+    .role-options {
+        flex-direction: column;
+    }
+}
+</style>
+</head>
+<body>
+
+<nav class="unified-navbar">
+    <div class="nav-container">
+        <div class="unified-logo" onclick="showPage('homePage')">🌍 ECOLINK</div>
+        <ul class="unified-links" id="navLinks">
+            <li><button onclick="showPage('homePage')">Home</button></li>
+            <li><button onclick="showPage('newsPage')">Submit News</button></li>
+            <li id="authNavItem"><button onclick="showPage('loginPage')" class="nav-login">Login</button></li>
+        </ul>
+    </div>
+</nav>
+
+<main>
+<!-- 1. HOME PAGE -->
+<section id="homePage" class="page active">
+    <section class="hero">
+        <div class="container">
+            <h1>Welcome to ECOLINK</h1>
+            <p>A citizen science platform for ecological management in Trenggalek</p>
+            <a href="#login" onclick="showPage('loginPage'); return false;" class="btn-primary">Get Started</a>
+        </div>
+    </section>
+
+    <section class="news-section">
+        <div class="container">
+            <h2>Local Ecological News</h2>
+            <div class="news-grid" id="newsGrid">
+                <p>Loading news...</p>
+            </div>
+        </div>
+    </section>
+</section>
+
+<!-- 2. LOGIN / REGISTER PAGE -->
+<section id="loginPage" class="page">
+    <section class="auth-section">
+        <div class="auth-container">
+            <div class="auth-box" id="loginBox">
+                <h2>Login to ECOLINK</h2>
+                <p>Must be 18+ to join</p>
+
+                <div class="form-error" id="loginError"></div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="name@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Enter password" required>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="loginBtn">Login</button>
+                </form>
+
+                <p class="auth-link">Don't have an account? <a href="#" onclick="toggleForms(); return false;">Register here</a></p>
+            </div>
+
+            <div class="auth-box hidden" id="registerBox">
+                <h2>Register for ECOLINK</h2>
+                <p>Must be 18+ to join</p>
+
+                <div class="form-error" id="registerError"></div>
+
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="regEmail">Email</label>
+                        <input type="email" id="regEmail" name="email" placeholder="name@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regPassword">Password</label>
+                        <input type="password" id="regPassword" name="password" placeholder="Min. 6 characters" required minlength="6">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="age">Age</label>
+                        <input type="number" id="age" name="age" min="1" placeholder="e.g. 20" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>I am registering as</label>
+                        <div class="role-options">
+                            <div class="role-option selected" data-role="umum" onclick="selectRole('umum')">👤 Umum</div>
+                            <div class="role-option" data-role="pelajar" onclick="selectRole('pelajar')">🎓 Pelajar</div>
+                        </div>
+                        <input type="hidden" id="selectedRole" value="umum">
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="registerBtn">Register</button>
+                </form>
+
+                <p class="auth-link">Already have an account? <a href="#" onclick="toggleForms(); return false;">Login here</a></p>
+            </div>
+        </div>
+    </section>
+</section>
+
+<!-- 3. SUBMIT NEWS PAGE -->
+<section id="newsPage" class="page">
+    <section class="auth-section">
+        <div class="auth-container news-container">
+            <div class="auth-box">
+                <h2>Submit Ecological News</h2>
+                <p>Help us track ecological changes in Trenggalek. Your report will be reviewed by an admin before appearing publicly.</p>
+
+                <div class="form-error" id="newsError"></div>
+
+                <form id="newsForm">
+                    <!-- Title -->
+                    <div class="form-group">
+                        <label for="title">News Title</label>
+                        <input type="text" id="title" name="title" placeholder="Enter news title" required>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" rows="4" placeholder="Describe the ecological event..." required></textarea>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="form-group">
+                        <label for="location">Location (RT/RW)</label>
+                        <input type="text" id="location" name="location" placeholder="e.g. RT 01/RW 02, Karangan">
+                    </div>
+
+                    <!-- Map -->
+                    <div class="form-group">
+                        <label>Choose Location on Map</label>
+                        <div id="map"></div>
+                        <p class="map-hint">Click on the map or drag the marker to choose the location.</p>
+                    </div>
+
+                    <!-- Latitude -->
+                    <div class="form-group">
+                        <label for="latitude">Latitude</label>
+                        <input type="number" id="latitude" name="latitude" step="0.00001" required>
+                    </div>
+
+                    <!-- Longitude -->
+                    <div class="form-group">
+                        <label for="longitude">Longitude</label>
+                        <input type="number" id="longitude" name="longitude" step="0.00001" required>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn-primary" id="newsSubmitBtn">Submit News</button>
+                </form>
+
+                <!-- Result -->
+                <div id="result"></div>
+            </div>
+        </div>
+    </section>
+</section>
+
+<!-- 4. ADMIN DASHBOARD PAGE -->
+<section id="adminPage" class="page">
+    <section class="auth-section">
+        <div class="auth-container admin-container">
+            <div class="auth-box" id="adminBox">
+                <div id="adminDeniedView" class="access-denied hidden">
+                    <h2>🚫 Access Denied</h2>
+                    <p>You must be logged in as an administrator to view this page.</p>
+                </div>
+
+                <div id="adminMainView" class="hidden">
+                    <div class="admin-header">
+                        <div>
+                            <h2 style="margin-bottom:2px;">Admin Dashboard</h2>
+                            <p style="margin-bottom:0;">Review, approve, or remove submitted news reports</p>
+                        </div>
+                    </div>
+
+                    <div class="admin-tabs">
+                        <button class="admin-tab-btn active" data-tab="pendingTab" onclick="switchAdminTab('pendingTab')">Pending Review</button>
+                        <button class="admin-tab-btn" data-tab="approvedTab" onclick="switchAdminTab('approvedTab')">Published</button>
+                    </div>
+
+                    <div class="admin-tab-content active" id="pendingTab">
+                        <div id="pendingList"><p class="empty-state">Loading...</p></div>
+                    </div>
+
+                    <div class="admin-tab-content" id="approvedTab">
+                        <div id="approvedList"><p class="empty-state">Loading...</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Firebase SDK (modular, via CDN) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    doc,
+    setDoc,
+    getDoc,
+    updateDoc,
+    deleteDoc,
+    query,
+    where,
+    orderBy,
+    onSnapshot,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+// --- Firebase Config ---
+const firebaseConfig = {
+    apiKey: "AIzaSyAXERC3N9t6ete_3geJczJV-_kPy-oU7nE",
+    authDomain: "ecolink-trenggalek.firebaseapp.com",
+    projectId: "ecolink-trenggalek",
+    storageBucket: "ecolink-trenggalek.firebasestorage.app",
+    messagingSenderId: "194272308418",
+    appId: "1:194272308418:web:a3b7c8474989e9756a9f5b"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Expose what inline onclick handlers need
+window._eco = { auth, db };
+
+/* --- Page Navigation ---
+   Pages are also reachable via URL hash, e.g. index.html#admin,
+   so a page can be bookmarked, shared, or typed directly. */
+var PAGE_HASH_MAP = {
+    homePage: 'home',
+    loginPage: 'login',
+    newsPage: 'submit',
+    adminPage: 'admin'
+};
+var HASH_PAGE_MAP = { home: 'homePage', login: 'loginPage', submit: 'newsPage', admin: 'adminPage' };
+
+window.showPage = function(pageId, skipHashUpdate) {
+    document.querySelectorAll('.page').forEach(function(page) {
+        page.classList.remove('active');
+    });
+    var page = document.getElementById(pageId);
+    if (page) page.classList.add('active');
+
+    if (pageId === 'newsPage') {
+        initMap();
+    } else if (pageId === 'adminPage') {
+        renderAdminPage();
+    }
+
+    if (!skipHashUpdate && PAGE_HASH_MAP[pageId]) {
+        history.replaceState(null, '', '#' + PAGE_HASH_MAP[pageId]);
+    }
+    window.scrollTo({top: 0, behavior: 'smooth'});
+};
+
+function openPageFromHash() {
+    var hash = window.location.hash.replace('#', '');
+    var pageId = HASH_PAGE_MAP[hash] || 'homePage';
+    showPage(pageId, true);
+}
+
+window.addEventListener('hashchange', openPageFromHash);
+
+/* --- Auth State: current user + profile (role) cache --- */
+let currentUser = null;
+let currentProfile = null; // { email, role, age }
+
+function updateNavForAuth() {
+    var authNavItem = document.getElementById('authNavItem');
+    if (!authNavItem) return;
+
+    if (currentUser && currentProfile) {
+        var userName = currentUser.email.split('@')[0];
+        var roleLabel = currentProfile.role === 'admin' ? 'Admin' : (currentProfile.role === 'pelajar' ? 'Pelajar' : 'Umum');
+        var adminBtn = currentProfile.role === 'admin'
+            ? '<button onclick="showPage(\'adminPage\')" class="nav-admin">🛡️ Admin</button>'
+            : '';
+        authNavItem.innerHTML =
+            adminBtn +
+            '<span class="user-greeting">👤 ' + userName + '<span class="role-badge">' + roleLabel + '</span></span>' +
+            '<button onclick="doLogout()" class="btn-logout">Logout</button>';
+    } else {
+        authNavItem.innerHTML =
+            '<button onclick="showPage(\'loginPage\')" class="nav-login">Login</button>';
+    }
+}
+
+window.doLogout = function() {
+    signOut(auth).then(function() {
+        showPage('homePage');
+    });
+};
+
+onAuthStateChanged(auth, async function(user) {
+    currentUser = user;
+    if (user) {
+        try {
+            var snap = await getDoc(doc(db, 'users', user.uid));
+            currentProfile = snap.exists() ? snap.data() : null;
+        } catch (e) {
+            console.error('Failed to load profile', e);
+            currentProfile = null;
+        }
+    } else {
+        currentProfile = null;
+    }
+    updateNavForAuth();
+    // Re-render admin page if currently open, in case auth state just resolved
+    var adminPageEl = document.getElementById('adminPage');
+    if (adminPageEl && adminPageEl.classList.contains('active')) {
+        renderAdminPage();
+    }
+});
+
+/* --- Login / Register Toggle --- */
+window.toggleForms = function() {
+    var loginBox = document.getElementById('loginBox');
+    var registerBox = document.getElementById('registerBox');
+    if (loginBox && registerBox) {
+        loginBox.classList.toggle('hidden');
+        registerBox.classList.toggle('hidden');
+    }
+};
+
+window.selectRole = function(role) {
+    document.getElementById('selectedRole').value = role;
+    document.querySelectorAll('.role-option').forEach(function(el) {
+        el.classList.toggle('selected', el.getAttribute('data-role') === role);
+    });
+};
+
+function showFormError(id, message) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = message;
+    el.style.display = message ? 'block' : 'none';
+}
+
+/* --- News Data & Rendering (Home: approved only, real-time) --- */
+var defaultNews = [
+    {
+        title: "Aksi Bersih Sungai Ngasinan Bersama Relawan",
+        date: "16 September 2026",
+        location: "Sungai Ngasinan, Trenggalek",
+        description: "Komunitas pemerhati lingkungan Trenggalek bersama warga sekitar bergotong royong membersihkan sampah plastik di aliran Sungai Ngasinan.",
+        image: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=500&q=80"
+    },
+    {
+        title: "Penanaman 1.000 Bibit Pohon di Lereng Wilis",
+        date: "14 September 2026",
+        location: "Lereng Wilis, Trenggalek",
+        description: "Upaya pencegahan longsor dan pemulihan daerah tangkapan air terus digencarkan melalui penanaman pohon buah lokal di kawasan hutan.",
+        image: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=500&q=80"
+    },
+    {
+        title: "Edukasi Konservasi Penyu di Pantai Prigi",
+        date: "10 September 2026",
+        location: "Pantai Prigi, Trenggalek",
+        description: "Program edukasi melibatkan generasi muda untuk memahami pentingnya menjaga ekosistem pesisir selatan Trenggalek.",
+        image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=500&q=80"
+    }
+];
+
+var fallbackImages = [
+    "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=500&q=80",
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=500&q=80",
+    "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=500&q=80"
+];
+
+function escapeHtml(str) {
+    if (str === undefined || str === null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function renderNewsCard(item, idx) {
+    var imgUrl = item.image || fallbackImages[idx % fallbackImages.length];
+    var locBadge = item.location ? '<span class="news-location">📍 ' + escapeHtml(item.location) + '</span>' : '';
+    var coordsText = (item.latitude && item.longitude) ? '🗺️ (' + item.latitude + ', ' + item.longitude + ')' : '';
+
+    return (
+        '<div class="news-card">' +
+        '<img src="' + imgUrl + '" alt="' + escapeHtml(item.title) + '" onerror="this.src=\'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=500&q=80\'">' +
+        '<div class="news-content">' +
+        '<div class="news-meta">' +
+            '<span class="news-date">🕒 ' + escapeHtml(item.date || 'Baru saja') + '</span>' +
+            locBadge +
+        '</div>' +
+        '<h3>' + escapeHtml(item.title) + '</h3>' +
+        '<p>' + escapeHtml(item.description) + '</p>' +
+        (coordsText ? '<p class="coords-info">' + coordsText + '</p>' : '') +
+        '</div></div>'
+    );
+}
+
+function renderStaticNews() {
+    // Renders only the hardcoded sample news, used before Firestore data arrives
+    var newsGrid = document.getElementById('newsGrid');
+    if (!newsGrid) return;
+    var html = defaultNews.map(renderNewsCard).join('');
+    newsGrid.innerHTML = html;
+}
+
+var approvedNewsCache = [];
+
+function renderNews() {
+    var newsGrid = document.getElementById('newsGrid');
+    if (!newsGrid) return;
+    var allNews = approvedNewsCache.concat(defaultNews);
+    if (allNews.length === 0) {
+        newsGrid.innerHTML = '<p class="empty-state">Belum ada berita.</p>';
+        return;
+    }
+    newsGrid.innerHTML = allNews.map(renderNewsCard).join('');
+}
+
+// Real-time listener: only approved news, newest first
+try {
+    var approvedQuery = query(
+        collection(db, 'news'),
+        where('status', '==', 'approved'),
+        orderBy('createdAt', 'desc')
+    );
+    onSnapshot(approvedQuery, function(snapshot) {
+        approvedNewsCache = snapshot.docs.map(function(d) {
+            var data = d.data();
+            return {
+                id: d.id,
+                title: data.title,
+                description: data.description,
+                location: data.location,
+                latitude: data.latitude,
+                longitude: data.longitude,
+                date: data.dateDisplay || 'Baru saja'
+            };
+        });
+        renderNews();
+    }, function(err) {
+        console.error('News listener error:', err);
+        renderStaticNews();
+    });
+} catch (e) {
+    console.error('Failed to set up news listener', e);
+    renderStaticNews();
+}
+
+/* --- Map Functions --- */
+var defaultLat = -8.0556;
+var defaultLng = 111.7077;
+
+function updateInputs(lat, lng) {
+    var latInput = document.getElementById('latitude');
+    var lngInput = document.getElementById('longitude');
+    if (latInput) latInput.value = Number(lat).toFixed(5);
+    if (lngInput) lngInput.value = Number(lng).toFixed(5);
+}
+
+function initMap() {
+    var mapElement = document.getElementById('map');
+    if (!mapElement || typeof L === 'undefined') return;
+
+    if (!window.ecoMap) {
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        });
+
+        var streets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS'
+        });
+
+        var topo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; National Geographic, DeLorme, NAVTEQ'
+        });
+
+        var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; Earthstar Geographics'
+        });
+
+        window.ecoMap = L.map('map', {
+            center: [defaultLat, defaultLng],
+            zoom: 12,
+            layers: [streets]
+        });
+
+        var baseMaps = {
+            "Streets": streets,
+            "Topographic": topo,
+            "Satellite": satellite
+        };
+
+        L.control.layers(baseMaps).addTo(window.ecoMap);
+
+        window.ecoMarker = L.marker([defaultLat, defaultLng], {
+            draggable: true
+        }).addTo(window.ecoMap);
+
+        window.ecoMarker.on('dragend', function() {
+            var pos = window.ecoMarker.getLatLng();
+            updateInputs(pos.lat, pos.lng);
+        });
+
+        window.ecoMap.on('click', function(e) {
+            window.ecoMarker.setLatLng(e.latlng);
+            updateInputs(e.latlng.lat, e.latlng.lng);
+        });
+
+        updateInputs(defaultLat, defaultLng);
+    }
+
+    setTimeout(function() {
+        if (window.ecoMap) {
+            window.ecoMap.invalidateSize();
+        }
+    }, 150);
+}
+
+/* --- Admin Dashboard --- */
+var pendingUnsub = null;
+var approvedUnsub = null;
+var currentAdminTab = 'pendingTab';
+
+window.switchAdminTab = function(tabId) {
+    currentAdminTab = tabId;
+    document.querySelectorAll('.admin-tab-btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+    });
+    document.querySelectorAll('.admin-tab-content').forEach(function(content) {
+        content.classList.toggle('active', content.id === tabId);
+    });
+};
+
+function renderAdminPage() {
+    var deniedView = document.getElementById('adminDeniedView');
+    var mainView = document.getElementById('adminMainView');
+
+    if (!currentUser || !currentProfile || currentProfile.role !== 'admin') {
+        deniedView.classList.remove('hidden');
+        mainView.classList.add('hidden');
+        // Clean up any active listeners since we no longer have access
+        if (pendingUnsub) { pendingUnsub(); pendingUnsub = null; }
+        if (approvedUnsub) { approvedUnsub(); approvedUnsub = null; }
+        return;
+    }
+
+    deniedView.classList.add('hidden');
+    mainView.classList.remove('hidden');
+
+    if (!pendingUnsub) {
+        var pendingQuery = query(
+            collection(db, 'news'),
+            where('status', '==', 'pending'),
+            orderBy('createdAt', 'desc')
+        );
+        pendingUnsub = onSnapshot(pendingQuery, function(snapshot) {
+            renderPendingList(snapshot);
+        }, function(err) {
+            console.error('Pending listener error:', err);
+            document.getElementById('pendingList').innerHTML = '<p class="empty-state">Gagal memuat data. Periksa Firestore rules.</p>';
+        });
+    }
+
+    if (!approvedUnsub) {
+        var approvedAdminQuery = query(
+            collection(db, 'news'),
+            where('status', '==', 'approved'),
+            orderBy('createdAt', 'desc')
+        );
+        approvedUnsub = onSnapshot(approvedAdminQuery, function(snapshot) {
+            renderApprovedList(snapshot);
+        }, function(err) {
+            console.error('Approved listener error:', err);
+            document.getElementById('approvedList').innerHTML = '<p class="empty-state">Gagal memuat data.</p>';
+        });
+    }
+}
+
+function renderPendingList(snapshot) {
+    var container = document.getElementById('pendingList');
+    if (!container) return;
+
+    if (snapshot.empty) {
+        container.innerHTML = '<p class="empty-state">Tidak ada berita yang menunggu review. 🎉</p>';
+        return;
+    }
+
+    var html = '';
+    snapshot.forEach(function(docSnap) {
+        var data = docSnap.data();
+        var id = docSnap.id;
+        html +=
+            '<div class="pending-item">' +
+                '<span class="status-pill pending">Pending</span>' +
+                '<h4>' + escapeHtml(data.title) + '</h4>' +
+                '<div class="meta-row">' +
+                    '<span><strong>Oleh:</strong> ' + escapeHtml(data.submitterEmail || 'unknown') + '</span>' +
+                    '<span><strong>Role:</strong> ' + escapeHtml(data.submitterRole || '-') + '</span>' +
+                    '<span><strong>Lokasi:</strong> ' + escapeHtml(data.location || '-') + '</span>' +
+                    '<span><strong>Tanggal:</strong> ' + escapeHtml(data.dateDisplay || '-') + '</span>' +
+                '</div>' +
+                '<p class="desc">' + escapeHtml(data.description) + '</p>' +
+                '<div class="pending-actions">' +
+                    '<button class="btn-approve" onclick="approveNews(\'' + id + '\')">✅ Approve</button>' +
+                    '<button class="btn-reject" onclick="rejectNews(\'' + id + '\')">🗑️ Reject / Delete</button>' +
+                '</div>' +
+            '</div>';
+    });
+    container.innerHTML = html;
+}
+
+function renderApprovedList(snapshot) {
+    var container = document.getElementById('approvedList');
+    if (!container) return;
+
+    if (snapshot.empty) {
+        container.innerHTML = '<p class="empty-state">Belum ada berita yang dipublish.</p>';
+        return;
+    }
+
+    var html = '';
+    snapshot.forEach(function(docSnap) {
+        var data = docSnap.data();
+        var id = docSnap.id;
+        html +=
+            '<div class="pending-item approved-item">' +
+                '<span class="status-pill approved">Published</span>' +
+                '<h4>' + escapeHtml(data.title) + '</h4>' +
+                '<div class="meta-row">' +
+                    '<span><strong>Oleh:</strong> ' + escapeHtml(data.submitterEmail || 'unknown') + '</span>' +
+                    '<span><strong>Role:</strong> ' + escapeHtml(data.submitterRole || '-') + '</span>' +
+                    '<span><strong>Lokasi:</strong> ' + escapeHtml(data.location || '-') + '</span>' +
+                    '<span><strong>Tanggal:</strong> ' + escapeHtml(data.dateDisplay || '-') + '</span>' +
+                '</div>' +
+                '<p class="desc">' + escapeHtml(data.description) + '</p>' +
+                '<div class="pending-actions">' +
+                    '<button class="btn-reject" onclick="rejectNews(\'' + id + '\')">🗑️ Hapus (Fake/Hoax)</button>' +
+                '</div>' +
+            '</div>';
+    });
+    container.innerHTML = html;
+}
+
+window.approveNews = async function(newsId) {
+    try {
+        await updateDoc(doc(db, 'news', newsId), {
+            status: 'approved',
+            reviewedAt: serverTimestamp(),
+            reviewedBy: currentUser ? currentUser.email : null
+        });
+    } catch (e) {
+        console.error('Approve failed', e);
+        alert('Gagal approve berita: ' + e.message);
+    }
+};
+
+window.rejectNews = async function(newsId) {
+    if (!confirm('Yakin ingin menghapus berita ini secara permanen?')) return;
+    try {
+        await deleteDoc(doc(db, 'news', newsId));
+    } catch (e) {
+        console.error('Delete failed', e);
+        alert('Gagal menghapus berita: ' + e.message);
+    }
+};
+
+/* --- Initialization on DOMContentLoaded --- */
+document.addEventListener('DOMContentLoaded', function() {
+    renderStaticNews();
+    openPageFromHash();
+
+    /* LOGIN */
+    var loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showFormError('loginError', '');
+            var email = document.getElementById('email').value.trim();
+            var password = document.getElementById('password').value;
+            var btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                loginForm.reset();
+                showPage('homePage');
+            } catch (err) {
+                console.error(err);
+                var msg = 'Login gagal. Periksa email dan password Anda.';
+                if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+                    msg = 'Email atau password salah.';
+                } else if (err.code === 'auth/invalid-email') {
+                    msg = 'Format email tidak valid.';
+                } else if (err.code === 'auth/too-many-requests') {
+                    msg = 'Terlalu banyak percobaan. Coba lagi nanti.';
+                }
+                showFormError('loginError', msg);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Login';
+            }
+        });
+    }
+
+    /* REGISTER */
+    var registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showFormError('registerError', '');
+
+            var age = parseInt(document.getElementById('age').value, 10);
+            var email = document.getElementById('regEmail').value.trim();
+            var password = document.getElementById('regPassword').value;
+            var role = document.getElementById('selectedRole').value;
+
+            if (isNaN(age) || age < 18) {
+                showFormError('registerError', 'Maaf, Anda harus berusia minimal 18 tahun untuk mendaftar di ECOLINK.');
+                return;
+            }
+
+            var btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.textContent = 'Registering...';
+
+            try {
+                var cred = await createUserWithEmailAndPassword(auth, email, password);
+                // Save profile with role in Firestore. Role is fixed as umum/pelajar here;
+                // "admin" is never assignable from this form and must be set manually in Firestore.
+                await setDoc(doc(db, 'users', cred.user.uid), {
+                    email: email,
+                    age: age,
+                    role: role === 'pelajar' ? 'pelajar' : 'umum',
+                    createdAt: serverTimestamp()
+                });
+
+                alert('Registrasi berhasil untuk ' + email + '! Silakan login.');
+                registerForm.reset();
+                selectRole('umum');
+                toggleForms();
+            } catch (err) {
+                console.error(err);
+                var msg = 'Registrasi gagal. Silakan coba lagi.';
+                if (err.code === 'auth/email-already-in-use') {
+                    msg = 'Email ini sudah terdaftar. Silakan login.';
+                } else if (err.code === 'auth/invalid-email') {
+                    msg = 'Format email tidak valid.';
+                } else if (err.code === 'auth/weak-password') {
+                    msg = 'Password terlalu lemah (minimal 6 karakter).';
+                }
+                showFormError('registerError', msg);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Register';
+            }
+        });
+    }
+
+    /* SUBMIT NEWS */
+    var newsForm = document.getElementById('newsForm');
+    var result = document.getElementById('result');
+
+    if (newsForm) {
+        newsForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showFormError('newsError', '');
+
+            if (!currentUser) {
+                showFormError('newsError', 'Anda harus login terlebih dahulu untuk submit berita.');
+                return;
+            }
+
+            var btn = document.getElementById('newsSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+
+            var newsData = {
+                title: document.getElementById('title').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                location: document.getElementById('location').value.trim() || 'Trenggalek',
+                latitude: document.getElementById('latitude').value,
+                longitude: document.getElementById('longitude').value,
+                dateDisplay: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                status: 'pending',
+                submitterUid: currentUser.uid,
+                submitterEmail: currentUser.email,
+                submitterRole: currentProfile ? currentProfile.role : 'umum',
+                createdAt: serverTimestamp()
+            };
+
+            try {
+                await addDoc(collection(db, 'news'), newsData);
+
+                if (result) {
+                    result.style.display = 'block';
+                    result.innerHTML =
+                        '<strong>✅ Berita berhasil dikirim!</strong><br>' +
+                        'Laporan Anda sedang menunggu verifikasi admin dan akan tampil di Beranda setelah disetujui.';
+                }
+
+                newsForm.reset();
+                if (window.ecoMarker) {
+                    window.ecoMarker.setLatLng([defaultLat, defaultLng]);
+                }
+                if (window.ecoMap) {
+                    window.ecoMap.setView([defaultLat, defaultLng], 12);
+                }
+                updateInputs(defaultLat, defaultLng);
+            } catch (err) {
+                console.error(err);
+                showFormError('newsError', 'Gagal mengirim berita: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Submit News';
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>
