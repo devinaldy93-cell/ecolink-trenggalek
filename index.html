@@ -1000,7 +1000,29 @@ function showFormError(id, message) {
 }
 
 /* --- News Data & Rendering (Home: approved only, real-time) --- */
-
+var defaultNews = [
+    {
+        title: "Aksi Bersih Sungai Ngasinan Bersama Relawan",
+        date: "16 September 2026",
+        location: "Sungai Ngasinan, Trenggalek",
+        description: "Komunitas pemerhati lingkungan Trenggalek bersama warga sekitar bergotong royong membersihkan sampah plastik di aliran Sungai Ngasinan.",
+        image: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=500&q=80"
+    },
+    {
+        title: "Penanaman 1.000 Bibit Pohon di Lereng Wilis",
+        date: "14 September 2026",
+        location: "Lereng Wilis, Trenggalek",
+        description: "Upaya pencegahan longsor dan pemulihan daerah tangkapan air terus digencarkan melalui penanaman pohon buah lokal di kawasan hutan.",
+        image: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=500&q=80"
+    },
+    {
+        title: "Edukasi Konservasi Penyu di Pantai Prigi",
+        date: "10 September 2026",
+        location: "Pantai Prigi, Trenggalek",
+        description: "Program edukasi melibatkan generasi muda untuk memahami pentingnya menjaga ekosistem pesisir selatan Trenggalek.",
+        image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=500&q=80"
+    }
+];
 
 var fallbackImages = [
     "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=500&q=80",
